@@ -18,7 +18,7 @@ not tested, the text says so.
 | Keyboard, touchpad, battery, charger | works (embedded controller, `staging/nvec`) |
 | Lid switch | works with a [small kernel patch](03-kernel.md#patches) |
 | Wi-Fi (Ralink or Atheros USB, depends on the unit) | works |
-| 2D/3D acceleration | works with the Grate Mesa driver, see [06-gpu.md](06-gpu.md) |
+| 2D/3D acceleration | works with the Grate Mesa driver and the changes on the `ac100-grate` branch, see [06-gpu.md](06-gpu.md) |
 | H.264 hardware decoder | works for Baseline (CAVLC) streams only; web video is CABAC |
 | Sound | the device opens and plays; not checked by ear |
 | Bluetooth, 3G modem, camera, HDMI | the kernel sees them; not used |
@@ -45,7 +45,8 @@ undone **as long as you have your BCT**. Step 1 saves it. Do not skip it.
 - A Linux PC.
 - A **mini-USB** cable (the AC100's recovery port).
 - A **USB keyboard**. Mainline U-Boot has no driver for the internal keyboard, and you need a
-  keyboard at the U-Boot prompt while setting up. Normal booting needs none.
+  keyboard at the U-Boot prompt while setting up. Normal booting needs none. (The U-Boot branch
+  below has an internal keyboard driver, but it can drop keys.)
 - An SD card (4 GB or more).
 
 ## More
@@ -53,8 +54,13 @@ undone **as long as you have your BCT**. Step 1 saves it. Do not skip it.
 - [07-embedded-controller.md](07-embedded-controller.md): the NVEC embedded controller, its
   protocol and events, as measured.
 - [08-troubleshooting.md](08-troubleshooting.md): dark screens, silent U-Boot, Wi-Fi, NEON crashes.
-- Kernel patches: branch [`ac100` on github.com/toomykins/linux](https://github.com/toomykins/linux/tree/ac100)
-  (Linux 7.2 + 4 commits).
+- Code, all tested on the machine:
+
+  | Branch | Content |
+  |---|---|
+  | [toomykins/linux `ac100`](https://github.com/toomykins/linux/tree/ac100) | Linux 7.2 + 4 commits: lid switch, ramoops, GPU cache fix, config fragment |
+  | [toomykins/u-boot `ac100`](https://github.com/toomykins/u-boot/tree/ac100) | U-Boot v2026.10-rc5 + 3 commits: internal keyboard driver, USB limits, config fragment |
+  | [toomykins/mesa `ac100-grate`](https://github.com/toomykins/mesa/tree/ac100-grate) | Grate Mesa driver + 16 commits: what makes the GPU usable on mainline |
 
 ## Sources and earlier work
 

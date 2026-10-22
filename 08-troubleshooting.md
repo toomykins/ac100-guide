@@ -4,7 +4,7 @@
 |---|---|
 | Mainline U-Boot runs but the screen stays black | an old environment in `mmcblk0boot1` sends the console to serial. Use a build with `CONFIG_ENV_IS_NOWHERE` for RAM boots, and wipe `boot1` when flashing ([02-u-boot.md](02-u-boot.md)) |
 | `fw_setenv` broke booting (U-Boot stops at the prompt) | it wrote an environment with only one variable into an empty `boot1`. Seed a full environment image first ([02-u-boot.md](02-u-boot.md#the-environment-and-editing-it-from-linux)). At the prompt, `env default -a; saveenv` restores the built-in one |
-| Internal keyboard does nothing at the U-Boot prompt | mainline U-Boot has no driver for it. Use a USB keyboard; `usb start` if it is not picked up |
+| Internal keyboard does nothing at the U-Boot prompt | mainline U-Boot has no driver for it. Use a USB keyboard (`usb start` if it is not picked up), or the driver on the U-Boot branch ([02-u-boot.md](02-u-boot.md#the-internal-keyboard-at-the-u-boot-prompt)) |
 | A USB keyboard is not found by U-Boot | keyboards with many interfaces exceed `USB_MAXINTERFACES` (8); raise it to 16 |
 | Panel stays dark after a warm `reboot` | happens sometimes, cause unknown. The system is up (try ssh). A power cycle always lights the panel |
 | Screen dark with the lid closed, or lit with the lid closed | the embedded controller does not switch the panel off by itself; only software does (lid service in [04-rootfs.md](04-rootfs.md#lid-screen-off-while-closed)) |

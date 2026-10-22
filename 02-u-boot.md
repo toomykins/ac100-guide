@@ -132,11 +132,23 @@ fw_printenv bootcmd      # must print bootcmd=bootflow scan
 
 ## The internal keyboard at the U-Boot prompt
 
-Not in mainline. ac100-ru's U-Boot fork (`github.com/ac100-ru/u-boot-ac100-exp`, branch
-`v2016.11-nvec-v1-dev`) had a driver for 2016 U-Boot. A port of that driver to current U-Boot was
-written during this work (polled I2C slave, protocol as in [07-embedded-controller.md](07-embedded-controller.md)).
-It works but loses the connection after some dozens of key presses and reconnects by itself. It
-is not published. A USB keyboard is the reliable way.
+Not in mainline. Branch [`ac100` on github.com/toomykins/u-boot](https://github.com/toomykins/u-boot/tree/ac100)
+(U-Boot v2026.10-rc5 + 3 commits) has a driver: a port of ac100-ru's 2016 driver
+(`github.com/ac100-ru/u-boot-ac100-exp`) as a polled I2C slave, protocol as in
+[07-embedded-controller.md](07-embedded-controller.md). The branch also has the USB interface
+limit raised and the configuration of this page as `board/compal/paz00/ac100.config`:
+
+```sh
+git clone --depth=1 -b ac100 https://github.com/toomykins/u-boot.git && cd u-boot
+make paz00_defconfig
+scripts/kconfig/merge_config.sh -m .config board/compal/paz00/ac100.config && make olddefconfig
+make -j$(nproc)
+```
+
+**Known problem:** the link to the controller drops after some dozens of key presses. The driver
+notices and reconnects within a fraction of a second, but key presses can be lost. Fine for typing
+a boot command; a USB keyboard is still the reliable way. Its standard input name is `nvec-kbc`
+(`stdin=serial,nvec-kbc,usbkbd`).
 
 If a boot loader talks to the embedded controller, it must switch the Tegra's I2C slave off
 before it starts Linux, or Linux gets timeouts from the controller for the whole session.

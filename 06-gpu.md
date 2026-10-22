@@ -4,11 +4,13 @@ NVIDIA never published the Tegra 2 GPU's instruction set. The **Grate** project
 (https://gitlab.com/grate-driver) reverse engineered it and wrote a Mesa (Gallium) driver. Mainline
 Mesa has no Tegra 2 3D driver.
 
-On mainline Linux 7.2 the Grate driver needed a lot of work before a desktop ran. That work was
-done for this guide's machine: a new fragment shader compiler, blending, depth/stencil/scissor,
-textures of all formats, batching of draw calls, buffer sharing with the compositor. **Those Mesa
-changes are not published yet.** Grate's own branches give you a driver that initialises, but
-draws little beyond the simplest shaders.
+On mainline Linux 7.2 the Grate driver needed a lot of work before a desktop ran: a new fragment
+shader compiler, blending, depth/stencil/scissor, textures of all formats, batching of draw calls,
+buffer sharing with the compositor. That work is branch
+[`ac100-grate` on github.com/toomykins/mesa](https://github.com/toomykins/mesa/tree/ac100-grate):
+16 commits on top of Grate's `grate-25.1.9` branch (commit `647c7941`, included as a single base
+commit without its history). Grate's own branches give you a driver that initialises but draws
+little beyond the simplest shaders.
 
 ## What it takes on the kernel side
 
@@ -20,11 +22,34 @@ draws little beyond the simplest shaders.
 
 ## Building Mesa for it
 
-- Build for armv7 without NEON, and with **`-Dc_args=-mtls-dialect=gnu -Dcpp_args=-mtls-dialect=gnu`**.
-  Mesa's configure test for TLS descriptors passes under qemu, but the resulting library hangs in
-  its first GL call on the device. Alpine's own Mesa package forces the same flag.
-- Install it to a prefix of its own (for example `/opt/grate`) and start programs with
-  `LD_LIBRARY_PATH=/opt/grate/lib`, so the distribution's Mesa stays untouched.
+Build in an armv7 Alpine (on the AC100 itself, slowly, or in an Alpine armv7 chroot under
+qemu-user on a PC). The packages the build root had (Alpine 3.24):
+
+```sh
+apk add build-base linux-headers meson samurai pkgconf python3 py3-mako py3-packaging py3-yaml \
+        bison flex expat-dev zlib-dev zstd-dev libdrm-dev wayland-dev wayland-protocols \
+        libx11-dev libxcb-dev libxdamage-dev libxext-dev libxfixes-dev libxrandr-dev \
+        libxshmfence-dev libxxf86vm-dev
+```
+
+```sh
+git clone --depth=1 -b ac100-grate https://github.com/toomykins/mesa.git && cd mesa
+meson setup build --prefix=/opt/grate --buildtype=release -Db_ndebug=true \
+  -Dgallium-drivers=grate,softpipe -Dvulkan-drivers= -Dllvm=disabled \
+  -Dplatforms=x11,wayland -Degl=enabled -Dgbm=enabled -Dglx=dri -Dopengl=true \
+  -Dgles1=disabled -Dgles2=enabled -Dshared-glapi=enabled -Dglvnd=disabled \
+  -Dgallium-va=disabled -Dgallium-rusticl=false -Dvideo-codecs= -Dtools= \
+  -Dlibunwind=disabled -Dvalgrind=disabled -Dlmsensors=disabled -Dzstd=enabled \
+  -Dc_args=-mtls-dialect=gnu -Dcpp_args=-mtls-dialect=gnu
+ninja -C build && ninja -C build install
+```
+
+- **`-mtls-dialect=gnu` is required.** Mesa's configure test for TLS descriptors passes under qemu,
+  but the resulting library hangs in its first GL call on the device. Alpine's own Mesa package
+  forces the same flag.
+- The prefix `/opt/grate` keeps the distribution's Mesa untouched. Start programs with
+  `LD_LIBRARY_PATH=/opt/grate/lib`, for example `LD_LIBRARY_PATH=/opt/grate/lib weston --backend=drm --renderer=gl`.
+- `GRATE_DEBUG=fp` prints the fragment programs, `MESA_GLSL=errors` shader link errors.
 
 ## What you get
 
@@ -64,4 +89,4 @@ Measured on the machine and written down because nobody had:
   controller then flips again.
 
 The full measured fragment instruction set, with the experiments behind each fact, exists as
-working notes from this bring-up and can be published with the driver changes.
+working notes from this bring-up; the commit messages on the branch describe each step.
